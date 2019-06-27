@@ -1,0 +1,65 @@
+USE NFL2018;
+
+-- procedure with parameter 'TeamId'
+CREATE PROCEDURE teamCoaches @TeamID int
+AS
+SELECT c.CoachFirstName, c.CoachLastName, t.TeamFirstName, t.Teamlastname, t.TeamAbbreviation
+FROM Coach c JOIN Team t
+ON c.TeamID = t.TeamID
+WHERE c.TeamId = @TeamId;
+
+EXEC teamCoaches 18;
+EXEC teamCoaches 20;
+
+-- procedure with parameter 'TeamAbbreviation' includes Join and Concatinate 
+CREATE PROC getCoaches @TeamAbbreviation nvarchar (5)
+AS
+SELECT (c.CoachFirstName + ' ' + c.CoachLastName) as Name, (t.TeamFirstName + ' ' + t.Teamlastname) as Team, t.TeamAbbreviation
+FROM Coach c JOIN Team t
+ON c.TeamID = t.TeamID
+WHERE t.TeamAbbreviation = @TeamAbbreviation;
+
+EXEC getCoaches 'Chi';
+EXEC getCoaches 'Phi';
+Exec getCoaches 'Dal';
+Exec getCoaches 'LAR';
+
+-- procedure w/ parameter includes Join, Union and Order By
+Create PROC playerByTeam @TeamAbbreviation nvarchar (5)
+AS 
+(SELECT w.FirstName, w.Lastname, p.PositionAbbreviation, w.FanPoints
+FROM Widereceivers w Join Position p
+ON w.PositionID = p.PositionId
+WHERE w.TeamID = (SELECT Team.TeamID
+FROM Team Where TeamAbbreviation = @TeamAbbreviation)
+UNION
+SELECT te.FirstName, te.LastName,  p.PositionAbbreviation, te.FanPoints
+FROM Tightends te Join Position p
+ON te.PositionID = p.PositionId
+WHERE te.TeamID = (SELECT Team.TeamID
+FROM Team Where TeamAbbreviation = @TeamAbbreviation)
+UNION
+SELECT q.FirstName, q.LastName, p.PositionAbbreviation, q.FanPoints 
+FROM Quarterbacks q Join Position p
+ON q.PositionID = p.PositionId
+WHERE q.TeamID = (SELECT Team.TeamID
+FROM Team Where TeamAbbreviation = @TeamAbbreviation)
+UNION
+SELECT r.FirstName, r.LastName, p.PositionAbbreviation, r.FanPoints
+FROM Runningbacks r Join Position p
+ON r.PositionID = p.PositionId
+WHERE r.TeamID = (SELECT Team.TeamID
+FROM Team Where TeamAbbreviation = @TeamAbbreviation)
+UNION
+SELECT k.FirstName, k.LastName, p.PositionAbbreviation, k.FanPoints
+FROM Kickers k Join Position p
+ON k.PositionID = p.PositionId
+WHERE k.TeamID = (SELECT Team.TeamID
+FROM Team Where TeamAbbreviation = @TeamAbbreviation)) 
+Order by FanPoints DESC;
+
+Exec playerByTeam 'Sea';
+Exec playerByTeam 'Jac';
+Exec playerByTeam 'NE';
+Exec playerByTeam 'Chi';
+Exec playerByTeam 'Min';
